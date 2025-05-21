@@ -83,17 +83,28 @@ void TomasuloSimulator::loadProgram(const string& filename) {
 
 void TomasuloSimulator::simulate() {
     int safetyCounter = 0;
-    while (completed < program.size() && safetyCounter < 1000) {
+
+    // Continue simulation until all issued instructions are completed or we reach the cap
+    while (safetyCounter < 1000) {
         writeBack();
         execute();
         issue();
         cycle++;
         safetyCounter++;
+
+        // Stop when all issued instructions have been completed
+        int issuedCount = 0;
+        for (const auto& inst : program) {
+            if (inst.issue != -1) issuedCount++;
+        }
+        if (completed >= issuedCount) {
+            break;
+        }
     }
 
     if (safetyCounter >= 1000) {
-        cout << "ERROR: Simulation stuck!\n";
-        cout << "Instructions completed: " << completed << " / " << program.size() << "\n";
+        cout << "ERROR: Simulation stuck!" << endl;
+        cout << "Instructions completed: " << completed << " / " << program.size() << endl;
     }
 
     printStats();
